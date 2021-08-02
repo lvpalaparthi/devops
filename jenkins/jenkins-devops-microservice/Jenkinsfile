@@ -1,3 +1,5 @@
+//scripted pipeline
+
 node {
 	stage('Build') {
 		echo "Build"
@@ -6,3 +8,139 @@ node {
 		echo "Test"
 	}
 }
+
+//declarative pipeline 
+
+pipeline{
+	agent any
+		stages {
+			stage ('Build'){
+				steps{
+					echo "Build"
+					echo "PATH - $Path"
+					echo "BUILD_NUMBER - $env.BUILD_NUMBER"
+					echo "BUILD_ID - $env.BUILD_ID"
+					echo "JOB_NAME - $env.JOB_NAME"
+					echo "BUILD_TAG - $env.BUILD_TAG"
+					echo "BUILD_URL - $env.BUILD_URL"
+				}
+			}
+			stage('Test'){
+				steps{
+					echo "Test"
+				}
+			}
+			stage('Integration Test'){
+				steps {
+					echo "Integration Test"
+				}
+			}
+		}
+		//In the case where one of the stages fail
+		post{
+			always{
+				echo 'I run always'
+			}
+			success{
+				echo 'I run when successful'
+			}
+			failure{
+				echo 'I run when there is a failure'
+			}
+			//changed{
+				//echo "I run when build status changes"
+
+			//}
+		}
+}
+
+
+//declarative pipeline with docker image
+
+pipeline{
+	//agent any
+	//agent {docker {image 'maven:3.6.3'}}
+	environment{
+		dockerHome = tool 'myDocker'
+		mavenHome = tool 'myMaven'
+		Path = "$dockerHome/bin:$mavenHome/bin:$Path"
+	}
+		stages {
+			stage ('Checkout'){
+				steps{
+					sh "mvn --version"
+					sh 'docker version'
+					writeFile file: 'groovy1.txt', text: 'Working with files the Groovy way is easy.'
+					sh 'ls -l groovy1.txt'
+					sh 'cat groovy1.txt'
+					echo "Checkout"
+					echo "PATH - $Path"
+					echo "BUILD_NUMBER - $env.BUILD_NUMBER"
+					echo "BUILD_ID - $env.BUILD_ID"
+					echo "JOB_NAME - $env.JOB_NAME"
+					echo "BUILD_TAG - $env.BUILD_TAG"
+					echo "BUILD_URL - $env.BUILD_URL"
+					
+				}
+			}
+			stage('Compile'){
+				steps{
+					sh "mvn test"
+				}
+			}
+			stage('Test'){
+				steps{
+					echo "Test"
+				}
+			}
+			stage('Integration Test'){
+				steps {
+					echo "Integration Test"
+					sh "mvn failsafe:integration-test failsafe:verify"
+				}
+			}
+			stage('Package'){
+				steps {
+					sh "mvn package -DskipTests"
+				}
+			}
+			stage('Build Docker Image'){
+				steps{
+					//docker build -t lvp123/jenkins-test:1.0
+					script{
+						dockerImage = docker.build("lvp123/jenkins-test:${env.BUILD.TAG}");
+					}
+				}
+			}
+			steps('Push Docker Image'){
+				steps{
+					script{
+						//add docker credentials to Jenkins with dockerID/pass
+						docker.withRegistry('', 'dockerHub'){
+							dockerImage.push();
+							dockerImage.push('latest');
+						}
+
+					}
+				}
+			}
+		}
+		//In the case where one of the stages fail
+		post{
+			always{
+				echo 'I run always'
+			}
+			success{
+				echo 'I run when successful'
+			}
+			failure{
+				echo 'I run when there is a failure'
+			}
+			//changed{
+				//echo "I run when build status changes"
+
+			//}
+		}
+}
+
+
