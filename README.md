@@ -38,4 +38,13 @@
     13. Ingress Controllers: Understand what ingress/envoy are and how it can be implemented with Contour and envoy 
     14. Deploy Prometheus and view K8s stats, node info and application metrics
     15. Start up EFK (Elastic-Fluentd-Kibana) stack in minikube -> run application and analyze logs in Kibana 
+    16. Create yaml files to deploy postgres as a service on Kubernetes 
+
+## Airflow 
+- Build and test airflow pipeline dags to monitor workflow process 
+- ## Tasks 
+    1. Create a sample workflow pipeline dag with tasks 
+    2. Run airflow dag and postgres service on Docker using docker-compose up
+    3. Deploy airflow service on Kubernetes 
+
 

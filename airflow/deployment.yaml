@@ -1,0 +1,75 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: airflow-deployment
+# spec:
+#   selector:
+#     matchLabels:
+#       app: airflow
+#   replicas: 2 # tells deployment to run 2 pods matching the template
+#   template:
+#     metadata:
+#       labels:
+#         app: airflow
+#     spec:
+#       containers:
+#       - name: airflow
+#         image: puckel/docker-airflow:1.10.7
+#         ports:
+#         - containerPort: 80
+# ---
+# #https://kubernetes.io/docs/concepts/services-networking/service/
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   name: airflow-service
+# spec:
+#   selector:
+#     app: airflow
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 80
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: postgres-config
+#   labels:
+#     app: postgres
+# data:
+#   POSTGRES_DB: airflow
+#   POSTGRES_USER: airflow
+#   POSTGRES_PASSWORD: airflow
+# spec:
+#   containers:
+#     - name: airflow
+#     image: postgres:9.6
+#     ports:
+#         - containerPort: 5432
+
+
+
+#     webserver:
+#         image: puckel/docker-airflow:1.10.7
+#         restart: always
+#         depends_on:
+#             - postgres
+#         environment:
+#             - LOAD_EX=n
+#             - EXECUTOR=Local
+#         logging:
+#             options:
+#                 max-size: 10m
+#                 max-file: "3"
+#         volumes:
+#             - ./dags:/usr/local/airflow/dags
+#             # - ./plugins:/usr/local/airflow/plugins
+#         ports:
+#             - "8080:8080"
+#         command: webserver
+#         healthcheck:
+#             test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+#             interval: 30s
+#             timeout: 30s
+#             retries: 3
